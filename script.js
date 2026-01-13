@@ -317,11 +317,8 @@ class HorizontalSlider {
 
 // Initialize sliders when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize first slider
-    const slider1 = new HorizontalSlider('sliderTrack1', 'sliderDots1', 1);
-    
-    // Initialize second slider
-    const slider2 = new HorizontalSlider('sliderTrack2', 'sliderDots2', 2);
+    // Initialize services slider (was slider2, now the only slider)
+    const servicesSlider = new HorizontalSlider('sliderTrack2', 'sliderDots2', 2);
 });
 
 // Smooth scroll to sections (optional navigation implementation)
@@ -369,7 +366,7 @@ window.addEventListener('scroll', handleAboutScroll);
 window.addEventListener('load', handleAboutScroll);
 
 // Add animation on scroll for work items
-const observerOptions = {
+const workObserverOptions = {
     threshold: 0.1,
     rootMargin: '0px 0px -100px 0px'
 };
@@ -381,7 +378,7 @@ const observer = new IntersectionObserver((entries) => {
             entry.target.style.transform = 'translateY(0)';
         }
     });
-}, observerOptions);
+}, workObserverOptions);
 
 // Observe work items
 document.querySelectorAll('.work-item').forEach(item => {
@@ -391,26 +388,32 @@ document.querySelectorAll('.work-item').forEach(item => {
     observer.observe(item);
 });
 
-// Button interactions
-document.querySelectorAll('.contact-btn, .view-all-btn').forEach(btn => {
+// Button interactions - Contact and View All
+document.querySelectorAll('.contact-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        // Create ripple effect
-        const ripple = document.createElement('span');
-        const rect = btn.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
-        
-        ripple.style.width = ripple.style.height = size + 'px';
-        ripple.style.left = x + 'px';
-        ripple.style.top = y + 'px';
-        ripple.classList.add('ripple');
-        
-        btn.appendChild(ripple);
-        
-        setTimeout(() => {
-            ripple.remove();
-        }, 600);
+        e.preventDefault();
+        // Scroll to contact section
+        const contactSection = document.getElementById('section7');
+        if (contactSection) {
+            contactSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+document.querySelectorAll('.view-all-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Scroll to first work section
+        const workSection = document.getElementById('section3');
+        if (workSection) {
+            workSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
     });
 });
 
@@ -474,8 +477,127 @@ entranceStyle.textContent = `
 `;
 document.head.appendChild(entranceStyle);
 
-console.log('🚀 Fullscreen scrolling website loaded successfully!');
+// ===== BACK TO TOP BUTTON =====
+const backToTop = document.getElementById('backToTop');
+const navbar = document.querySelector('.navbar');
+
+// Show/hide back to top button and navbar scroll effect
+window.addEventListener('scroll', () => {
+    // Back to top button
+    if (window.scrollY > 500) {
+        backToTop.classList.add('visible');
+    } else {
+        backToTop.classList.remove('visible');
+    }
+    
+    // Navbar background on scroll
+    if (window.scrollY > 100) {
+        navbar.classList.add('scrolled');
+    } else {
+        navbar.classList.remove('scrolled');
+    }
+});
+
+// Back to top click
+backToTop.addEventListener('click', () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+});
+
+// ===== SCROLL PROGRESS INDICATOR =====
+const scrollProgress = document.getElementById('scrollProgress');
+
+window.addEventListener('scroll', () => {
+    const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrolled = (window.scrollY / windowHeight) * 100;
+    scrollProgress.style.width = scrolled + '%';
+});
+
+// ===== SMOOTH IMAGE LOADING =====
+document.addEventListener('DOMContentLoaded', () => {
+    const images = document.querySelectorAll('img');
+    
+    images.forEach(img => {
+        if (img.complete) {
+            img.style.opacity = '1';
+        } else {
+            img.addEventListener('load', () => {
+                img.style.opacity = '1';
+            });
+        }
+    });
+});
+
+// ===== ENHANCED BUTTON RIPPLE EFFECT =====
+const buttons = document.querySelectorAll('.contact-btn, .view-all-btn, .slider-btn');
+
+buttons.forEach(button => {
+    button.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        ripple.classList.add('ripple');
+        
+        this.appendChild(ripple);
+        
+        setTimeout(() => {
+            ripple.remove();
+        }, 600);
+    });
+});
+
+// Add ripple styles
+const rippleStyle = document.createElement('style');
+rippleStyle.textContent = `
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        transform: scale(0);
+        animation: rippleEffect 0.6s ease-out;
+        pointer-events: none;
+    }
+    
+    @keyframes rippleEffect {
+        to {
+            transform: scale(2);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(rippleStyle);
+
+// ===== PERFORMANCE OPTIMIZATION =====
+// Lazy load images
+if ('IntersectionObserver' in window) {
+    const imageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                if (img.dataset.src) {
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                }
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+    
+    document.querySelectorAll('img[data-src]').forEach(img => {
+        imageObserver.observe(img);
+    });
+}
+
+console.log('🚀 BY PLANT website loaded successfully!');
+console.log('✨ All modern features activated!');
 
 // Smooth scrolling behavior - Natural flow like BBDO.com
 // No wheel hijacking, just natural smooth scroll
-
